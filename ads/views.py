@@ -246,3 +246,34 @@ class PublicAdsByCityAndCategoryView(View):
         } for ad in ads_query]
 
         return JsonResponse(ads_data, safe=False)
+    
+
+
+class AdSearchView(View):
+    def get(self, request, city_id):
+        query = request.GET.get('q', '').strip()
+
+        # Проверка: город существует?
+        if not City.objects.filter(id=city_id).exists():
+            return JsonResponse({"detail": "Город не найден"}, status=404)
+
+        # Базовый запрос по городу
+        ads_query = Ad.objects.select_related('category')\
+                              .prefetch_related('photos')\
+                              .filter(cities__id=city_id)\
+                              .order_by('-created_at')
+
+        # Если есть поисковый текст — фильтруем
+        if query:
+            ads_query = ads_query.filter(description__icontains=query)
+
+        ads_data = [{
+            "id": ad.id,
+            "description": ad.description,
+            "contact_phone": ad.contact_phone,
+            "category": ad.category.title,
+            "created_at": ad.created_at.isoformat(),
+            "images": [request.build_absolute_uri(photo.image.url) for photo in ad.photos.all()],
+        } for ad in ads_query[:50]]  # ограничим, чтобы не грузить всё подряд
+
+        return JsonResponse(ads_data, safe=False)

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CreateAdView, AdsByCityView, CitiesListView, AdsByCityAndCategoryView, AdsByCityAndCategoryViewMine, EditAdView, PublicAdsByCityAndCategoryView
+from .views import CreateAdView, AdSearchView, AdsByCityView, CitiesListView, AdsByCityAndCategoryView, AdsByCityAndCategoryViewMine, EditAdView, PublicAdsByCityAndCategoryView
 
 urlpatterns = [
     path('create/', CreateAdView.as_view()),
@@ -10,4 +10,5 @@ urlpatterns = [
     path('edit/<int:ad_id>/', EditAdView.as_view()),
 
     path('public-city/<int:city_id>/category/<int:category_id>/', PublicAdsByCityAndCategoryView.as_view()),
+    path('search/<int:city_id>/', AdSearchView.as_view(), name='ad-search'),
 ]
