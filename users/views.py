@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model, authenticate
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,6 +8,9 @@ from rest_framework.permissions import IsAuthenticated
 from ads.models import Ad, City
 from django.utils.timezone import now
 from datetime import timedelta
+from users.models import ModeratorActivityStat
+from django.utils import timezone
+
 
 User = get_user_model()
 
@@ -164,9 +168,11 @@ class UpdateModeratorView(APIView):
 
 def get_stats_since(start_date):
     moderators = User.objects.filter(is_staff=True)
-    all_cities = City.objects.all()  # получаем все города один раз
+    all_cities = City.objects.all()
 
     stats = []
+    city_totals = {city.id: {"city_name": city.name, "ads_count": 0} for city in all_cities}
+    total_ads_count = 0
 
     for moderator in moderators:
         ads = Ad.objects.filter(
@@ -174,25 +180,23 @@ def get_stats_since(start_date):
             created_at__gte=start_date
         ).prefetch_related('cities')
 
-        # Считаем объявления по каждому городу
         city_counter = {city.id: {"city_name": city.name, "ads_count": 0} for city in all_cities}
 
         for ad in ads:
             for city in ad.cities.all():
                 city_counter[city.id]["ads_count"] += 1
+                city_totals[city.id]["ads_count"] += 1
+                total_ads_count += 1
 
-        # Преобразуем в список
         city_stats = [
             {"city_id": city_id, **data}
             for city_id, data in city_counter.items()
         ]
 
-        # Добавляем строку "В общем"
-        total_count = sum(item["ads_count"] for item in city_stats)
         city_stats.insert(0, {
             "city_id": 0,
             "city_name": "В общем",
-            "ads_count": total_count
+            "ads_count": sum(item["ads_count"] for item in city_stats)
         })
 
         stats.append({
@@ -201,7 +205,26 @@ def get_stats_since(start_date):
             "city_stats": city_stats
         })
 
+    # Общие суммы по городам
+    total_city_stats = [
+        {"city_id": city_id, **data}
+        for city_id, data in city_totals.items()
+    ]
+    total_city_stats.insert(0, {
+        "city_id": 0,
+        "city_name": "В общем",
+        "ads_count": total_ads_count
+    })
+
+    stats.append({
+        "moderator_id": 0,
+        "moderator_name": f"Всего по всем модераторам ({total_ads_count})",
+        "city_stats": total_city_stats
+    })
+
     return stats
+
+
 
 
 
@@ -242,3 +265,65 @@ class StatsMonthView(APIView):
         month_start = today.replace(day=1)
         data = get_stats_since(month_start)
         return Response(data)
+
+
+
+
+
+
+
+
+
+
+class ModeratorActivityStatsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        today = timezone.now().date()
+        three_days_ago = today - timedelta(days=2)  # включительно 3 дня: today, -1, -2
+
+        stats = ModeratorActivityStat.objects.filter(date__gte=three_days_ago)
+        users = User.objects.filter(id__in=stats.values_list("user_id", flat=True).distinct())
+
+        response_data = {}
+
+        for user in users:
+            user_stats = stats.filter(user=user)
+            user_data = {}
+
+            for stat in user_stats:
+                date_str = stat.date.isoformat()
+                if date_str not in user_data:
+                    user_data[date_str] = {}
+                user_data[date_str][str(stat.hour)] = stat.ad_count
+
+            response_data[user.name] = user_data
+
+        return Response(response_data)
+    
+
+class SingleModeratorStatsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        today = timezone.now().date()
+        three_days = [today - timedelta(days=i) for i in range(2, -1, -1)] 
+        user = get_object_or_404(User, id=user_id)
+        stats = ModeratorActivityStat.objects.filter(user=user, date__in=three_days)
+
+        # Собираем в словарь: { (date, hour): count }
+        stats_map = {(s.date, s.hour): s.ad_count for s in stats}
+
+        user_data = {}
+
+        for date in three_days:
+            date_str = date.isoformat()
+            user_data[date_str] = {}
+
+            for hour in range(24):
+                user_data[date_str][str(hour)] = stats_map.get((date, hour), 0)
+
+        return Response({
+            "user": user.name,
+            "data": user_data
+        })

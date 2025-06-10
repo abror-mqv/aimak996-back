@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.conf import settings
 
 class UserManager(BaseUserManager):
     def create_user(self, name, phone, password=None, **extra_fields):
@@ -52,3 +53,20 @@ class IsModerator(BasePermission):
 class IsAdminOrModerator(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role in ['admin', 'moderator']
+
+
+class ModeratorActivityStat(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='activity_stats'
+    )
+    date = models.DateField()
+    hour = models.PositiveSmallIntegerField()  # 0–23
+    ad_count = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ('user', 'date', 'hour')
+
+    def __str__(self):
+        return f"{self.user.name} - {self.date} {self.hour}:00 - {self.ad_count} ads"
