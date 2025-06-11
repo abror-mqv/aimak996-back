@@ -19,6 +19,8 @@ class CityBoardSerializer(serializers.ModelSerializer):
     
 
 class PinnedMessageSerializer(serializers.ModelSerializer):
+    cities = serializers.StringRelatedField(many=True)
+
     class Meta:
         model = PinnedMessage
-        fields = ['id', 'text', 'created_at']
+        fields = ['id', 'text', 'is_active', 'created_at', 'starts_at', 'ends_at', 'cities']
