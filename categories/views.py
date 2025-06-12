@@ -14,7 +14,11 @@ from ads.models import City
 class CategoryListView(APIView):
     def get(self, request):
         categories = Category.objects.all()
-        data = [{"id": cat.id, "name": cat.title} for cat in categories]
+        data = [{
+            "id": cat.id,
+            "name": cat.name_kg, 
+            "ru_name": cat.ru_name
+        } for cat in categories]
         return Response(data)
     
 

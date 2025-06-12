@@ -218,7 +218,7 @@ def get_stats_since(start_date):
 
     stats.append({
         "moderator_id": 0,
-        "moderator_name": f"Всего по всем модераторам ({total_ads_count})",
+        "moderator_name": f"Всего по всем модераторам",
         "city_stats": total_city_stats
     })
 

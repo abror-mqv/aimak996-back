@@ -1,11 +1,12 @@
 from django.db import models
 
 class Category(models.Model):
-    title = models.CharField(max_length=255)
+    name_kg = models.CharField(max_length=255)  # кыргызское название
+    ru_name = models.CharField(max_length=255)  # русское название
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.title
+        return self.name_kg
 
 
 

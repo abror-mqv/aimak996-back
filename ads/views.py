@@ -9,7 +9,7 @@ from .models import Ad, AdPhoto, City
 from categories.models import Category
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage
 from django.db.models import Q
 from django.contrib.auth import get_user_model
 from users.models import ModeratorActivityStat
@@ -256,17 +256,33 @@ class PublicAdsByCityAndCategoryView(View):
             if category_id != 0 and not Category.objects.filter(id=category_id).exists():
                 return JsonResponse({"detail": "Категория не найдена"}, status=404)
 
-        # Формируем ответ
-        ads_data = [{
-            "id": ad.id,
-            "description": ad.description,
-            "contact_phone": ad.contact_phone,
-            "category": ad.category.title,
-            "created_at": ad.created_at.isoformat(),
-            "images": [request.build_absolute_uri(photo.image.url) for photo in ad.photos.all()],
-        } for ad in ads_query]
+        # Параметры пагинации
+        page = int(request.GET.get('page', 1))
+        limit = int(request.GET.get('limit', 20))
+        paginator = Paginator(ads_query, limit)
+        try:
+            ads_page = paginator.page(page)
+        except EmptyPage:
+            ads_page = []
 
-        return JsonResponse(ads_data, safe=False)
+        ads_data = [
+            {
+                "id": ad.id,
+                "description": ad.description,
+                "contact_phone": ad.contact_phone,
+                "category": ad.category.title,
+                "created_at": ad.created_at.isoformat(),
+                "images": [request.build_absolute_uri(photo.image.url) for photo in ad.photos.all()],
+            }
+            for ad in ads_page
+        ]
+
+        return JsonResponse({
+            "results": ads_data,
+            "page": page,
+            "total_pages": paginator.num_pages,
+            "total_count": paginator.count
+        }, safe=False)
     
 
 
