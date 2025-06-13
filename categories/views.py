@@ -24,7 +24,7 @@ class CategoryListView(APIView):
 
 class CityBoardListView(APIView):
     def get(self, request):
-        boards = CityBoard.objects.all().order_by('city')
+        boards = CityBoard.objects.all().order_by('is_active')
         serializer = CityBoardSerializer(boards, many=True, context={'request': request})
         return Response(serializer.data)
     
