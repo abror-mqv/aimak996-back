@@ -20,7 +20,7 @@ class Ad(models.Model):
     author = models.ForeignKey(User, on_delete=models.PROTECT, related_name='ads', null=True, blank=True, default=None)
 
     def __str__(self):
-        return f"{self.contact_phone} - {self.category.title}"
+        return f"{self.contact_phone} - {self.category.name_kg}"
 
     def is_expired(self):
         if self.category.name.lower() == "попутка":
