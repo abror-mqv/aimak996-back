@@ -2,7 +2,7 @@ from datetime import timedelta
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Category, CityBoard, PinnedMessage, Contacts
-from .serializers import CityBoardSerializer, PinnedMessageSerializer, ContactInfoSerializer
+from .serializers import CityBoardSerializer, PinnedMessageSerializer
 
 from django.utils import timezone
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
@@ -146,13 +146,16 @@ class ContactInfoView(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
 
-            data = {
+            response_data = {
                 "admin_phone": admin_contact.admin_phone,
-                "city": city
+                "city": {
+                    "id": city.id,
+                    "name": city.name,
+                    "moderator_phone": city.moderator_phone
+                }
             }
             
-            serializer = ContactInfoSerializer(data)
-            return Response(serializer.data)
+            return Response(response_data)
             
         except City.DoesNotExist:
             return Response(
