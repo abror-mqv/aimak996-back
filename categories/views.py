@@ -1,8 +1,8 @@
 from datetime import timedelta
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Category, CityBoard, PinnedMessage
-from .serializers import CityBoardSerializer, PinnedMessageSerializer
+from .models import Category, CityBoard, PinnedMessage, Contacts
+from .serializers import CityBoardSerializer, PinnedMessageSerializer, ContactInfoSerializer
 
 from django.utils import timezone
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
@@ -10,6 +10,7 @@ from django.db import models
 from django.db.models import Q
 
 from ads.models import City
+from rest_framework import status
 
 class CategoryListView(APIView):
     def get(self, request):
@@ -124,3 +125,37 @@ class DeactivatePinnedMessageView(APIView):
         message.save()
 
         return Response({"message": "Сообщение деактивировано"}, status=200)
+
+class ContactInfoView(APIView):
+    def get(self, request):
+        city_id = request.query_params.get('city_id')
+        
+        if not city_id:
+            return Response(
+                {"error": "city_id is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            city = City.objects.get(id=city_id)
+            admin_contact = Contacts.objects.filter(is_active=True).first()
+            
+            if not admin_contact:
+                return Response(
+                    {"error": "Admin contact not found"}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            data = {
+                "admin_phone": admin_contact.admin_phone,
+                "city": city
+            }
+            
+            serializer = ContactInfoSerializer(data)
+            return Response(serializer.data)
+            
+        except City.DoesNotExist:
+            return Response(
+                {"error": "City not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )

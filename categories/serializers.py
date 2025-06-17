@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import CityBoard, PinnedMessage
+from .models import CityBoard, PinnedMessage, Contacts
+from ads.models import City
 
 class CityBoardSerializer(serializers.ModelSerializer):
     city_name = serializers.CharField(source='city', read_only=True)
@@ -24,3 +25,17 @@ class PinnedMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PinnedMessage
         fields = ['id', 'text', 'is_active', 'created_at', 'starts_at', 'ends_at', 'cities']
+
+class CityContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = ['id', 'name', 'moderator_phone']
+
+class AdminContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contacts
+        fields = ['admin_phone']
+
+class ContactInfoSerializer(serializers.Serializer):
+    admin_phone = serializers.CharField()
+    city = CityContactSerializer()
