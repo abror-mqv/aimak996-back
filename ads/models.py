@@ -9,6 +9,8 @@ class City(models.Model):
     name = models.CharField(max_length=100, unique=True)
     moderator_phone = models.CharField(max_length=20, blank=True, null=True)
 
+    text_for_share = models.TextField(max_length=1000, blank=True, null=True, default="")
+
     def __str__(self):
         return self.name
 

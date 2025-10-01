@@ -46,3 +46,5 @@ class PinnedMessage(models.Model):
 
     def __str__(self):
         return f"PinnedMessage({self.text[:30]}...)"
+
+

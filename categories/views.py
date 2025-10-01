@@ -151,7 +151,8 @@ class ContactInfoView(APIView):
                 "city": {
                     "id": city.id,
                     "name": city.name,
-                    "moderator_phone": city.moderator_phone
+                    "moderator_phone": city.moderator_phone,
+                    "text_for_share": city.text_for_share
                 }
             }
             
