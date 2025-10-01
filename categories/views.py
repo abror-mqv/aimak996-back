@@ -152,7 +152,8 @@ class ContactInfoView(APIView):
                     "id": city.id,
                     "name": city.name,
                     "moderator_phone": city.moderator_phone,
-                    "text_for_share": city.text_for_share
+                    "text_for_share": city.text_for_share,
+                    "text_for_upload": city.text_for_upload
                 }
             }
             
