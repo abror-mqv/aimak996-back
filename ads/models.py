@@ -14,8 +14,8 @@ class City(models.Model):
 
     playmarket_link = models.URLField(blank=True, null=True)
     appstore_link = models.URLField(blank=True, null=True)  
-    update_available = models.BooleanField(default=False)
     update_text = models.TextField(max_length=1000, blank=True, null=True, default="")
+    required_version = models.CharField(max_length=20, blank=True, null=True)
     
     def __str__(self):
         return self.name

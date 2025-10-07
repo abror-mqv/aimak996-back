@@ -160,10 +160,10 @@ class ContactInfoView(APIView):
                     "text_for_upload": city.text_for_upload
                 },
                 "update": {
-                    "available": city.update_available,
                     "text": city.update_text,
                     "playmarket_link": city.playmarket_link,
-                    "appstore_link": city.appstore_link
+                    "appstore_link": city.appstore_link,
+                    "required_version": city.required_version
                 }
             }
 
