@@ -12,23 +12,25 @@ from django.db.models import Q
 from ads.models import City
 from rest_framework import status
 
+
 class CategoryListView(APIView):
     def get(self, request):
         categories = Category.objects.all()
         data = [{
             "id": cat.id,
-            "name": cat.name_kg, 
+            "name": cat.name_kg,
             "ru_name": cat.ru_name
         } for cat in categories]
         return Response(data)
-    
+
 
 class CityBoardListView(APIView):
     def get(self, request):
         boards = CityBoard.objects.all().order_by('-is_active')
-        serializer = CityBoardSerializer(boards, many=True, context={'request': request})
+        serializer = CityBoardSerializer(
+            boards, many=True, context={'request': request})
         return Response(serializer.data)
-    
+
 
 class PinnedMessageByCityView(APIView):
     permission_classes = [AllowAny]
@@ -50,7 +52,8 @@ class PinnedMessageByCityView(APIView):
                 cities=city,
             )
             .filter(
-                models.Q(starts_at__lte=now) | models.Q(starts_at__isnull=True),
+                models.Q(starts_at__lte=now) | models.Q(
+                    starts_at__isnull=True),
                 models.Q(ends_at__gte=now) | models.Q(ends_at__isnull=True),
             )
             .order_by("-created_at")
@@ -60,17 +63,18 @@ class PinnedMessageByCityView(APIView):
         if pinned_message:
             return Response(PinnedMessageSerializer(pinned_message).data)
         return Response({"message": None})
-    
+
 
 class PinnedMessageListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         three_months_ago = timezone.now() - timedelta(days=90)
-        messages = PinnedMessage.objects.filter(created_at__gte=three_months_ago).order_by('-created_at')
+        messages = PinnedMessage.objects.filter(
+            created_at__gte=three_months_ago).order_by('-created_at')
         serializer = PinnedMessageSerializer(messages, many=True)
         return Response(serializer.data)
-    
+
 
 class CreatePinnedMessageView(APIView):
     permission_classes = [IsAuthenticated]
@@ -108,7 +112,6 @@ class CreatePinnedMessageView(APIView):
         return Response({"message": "Закреплённое сообщение создано", "id": message.id}, status=201)
 
 
-
 class DeactivatePinnedMessageView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -126,23 +129,24 @@ class DeactivatePinnedMessageView(APIView):
 
         return Response({"message": "Сообщение деактивировано"}, status=200)
 
+
 class ContactInfoView(APIView):
     def get(self, request):
         city_id = request.query_params.get('city_id')
-        
+
         if not city_id:
             return Response(
-                {"error": "city_id is required"}, 
+                {"error": "city_id is required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
             city = City.objects.get(id=city_id)
             admin_contact = Contacts.objects.filter(is_active=True).first()
-            
+
             if not admin_contact:
                 return Response(
-                    {"error": "Admin contact not found"}, 
+                    {"error": "Admin contact not found"},
                     status=status.HTTP_404_NOT_FOUND
                 )
 
@@ -154,13 +158,19 @@ class ContactInfoView(APIView):
                     "moderator_phone": city.moderator_phone,
                     "text_for_share": city.text_for_share,
                     "text_for_upload": city.text_for_upload
+                },
+                "update": {
+                    "available": city.update_available,
+                    "text": city.update_text,
+                    "playmarket_link": city.playmarket_link,
+                    "appstore_link": city.appstore_link
                 }
             }
-            
+
             return Response(response_data)
-            
+
         except City.DoesNotExist:
             return Response(
-                {"error": "City not found"}, 
+                {"error": "City not found"},
                 status=status.HTTP_404_NOT_FOUND
             )

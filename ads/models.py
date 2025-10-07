@@ -11,6 +11,11 @@ class City(models.Model):
 
     text_for_share = models.TextField(max_length=1000, blank=True, null=True, default="")
     text_for_upload = models.TextField(max_length=1000, blank=True, null=True, default="")
+
+    playmarket_link = models.URLField(blank=True, null=True)
+    appstore_link = models.URLField(blank=True, null=True)  
+    update_available = models.BooleanField(default=False)
+    update_text = models.TextField(max_length=1000, blank=True, null=True, default="")
     
     def __str__(self):
         return self.name
