@@ -48,19 +48,20 @@ class CreateAdView(APIView):
             AdPhoto.objects.create(ad=ad, image=image)
 
         
-        now = timezone.now()
+        now = timezone.now().astimezone(pytz.timezone('Asia/Bishkek'))
         date = now.date()
         hour = now.hour
 
-        stat_obj, _ = ModeratorActivityStat.objects.get_or_create(
+        stat_obj, created = ModeratorActivityStat.objects.get_or_create(
             user=request.user,
             date=date,
             hour=hour,
             defaults={'ad_count': 1}
         )
-        if not _:
+        if not created:
             stat_obj.ad_count += 1
             stat_obj.save()
+
 
             
 
