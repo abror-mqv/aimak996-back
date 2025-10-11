@@ -31,10 +31,11 @@ CORS_ALLOWED_ORIGINS = [
 
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3010",
-
+    "http://176.126.164.86:3001",
+    "http://176.126.164.86:3000"
 ]
 
-ALLOWED_HOSTS = ["127.0.0.1", "5.59.233.32"]
+ALLOWED_HOSTS = ["127.0.0.1", "176.126.164.86"]
 
 # CORS_ALLOW_ALL_ORIGINS = True
 # Application definition
