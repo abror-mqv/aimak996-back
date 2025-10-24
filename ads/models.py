@@ -27,7 +27,7 @@ class Ad(models.Model):
     cities = models.ManyToManyField('City', related_name='ads')
     created_at = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, on_delete=models.PROTECT, related_name='ads', null=True, blank=True, default=None)
-
+    is_confident = models.BooleanField(default=False)
     def __str__(self):
         return f"{self.contact_phone} - {self.category.name_kg}"
 
