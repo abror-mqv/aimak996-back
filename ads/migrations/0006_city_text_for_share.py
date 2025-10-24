@@ -2,9 +2,12 @@
 
 from django.db import migrations, models
 
+def set_confident_flags(apps, schema_editor):
+    Ad = apps.get_model("ads", "Ad")
+    Ad.objects.update(is_confident=False)
 
 class Migration(migrations.Migration):
-
+    
     dependencies = [
         ('ads', '0005_city_moderator_phone'),
     ]
@@ -15,4 +18,5 @@ class Migration(migrations.Migration):
             name='text_for_share',
             field=models.TextField(blank=True, default='', max_length=1000, null=True),
         ),
+        migrations.RunPython(set_confident_flags)
     ]
