@@ -12,6 +12,6 @@ urlpatterns = [
     path('edit/<int:ad_id>/', EditAdView.as_view()),
     path('delete/<int:ad_id>/', DeleteAdView.as_view(), name='delete_ad'),
 
-    path('public-city/<int:city_id>/category/<int:category_id>/', PublicAdsByCityAndCategoryView.as_view()),
+    path('public-city/<int:city_id>/category/<int:category_id>', PublicAdsByCityAndCategoryView.as_view()),
     path('search/<int:city_id>/', AdSearchView.as_view(), name='ad-search'),
 ]

@@ -2,6 +2,9 @@
 
 from django.db import migrations, models
 
+def set_confident_flags(apps, schema_editor):
+    Ad = apps.get_model("ads", "Ad")
+    Ad.objects.update(is_confident=False)
 
 class Migration(migrations.Migration):
 
@@ -14,16 +17,6 @@ class Migration(migrations.Migration):
             model_name='ad',
             name='is_confident',
             field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name='city',
-            name='appstore_link',
-            field=models.URLField(blank=True, null=True),
-        ),
-        migrations.AddField(
-            model_name='city',
-            name='playmarket_link',
-            field=models.URLField(blank=True, null=True),
         ),
         migrations.AddField(
             model_name='city',
