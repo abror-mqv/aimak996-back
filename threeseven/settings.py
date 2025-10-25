@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'categories',
     'users',
     'rest_framework.authtoken',
+    'ai'
 ]
 
 REST_FRAMEWORK = {
