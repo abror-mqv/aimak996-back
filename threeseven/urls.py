@@ -10,7 +10,7 @@ urlpatterns = [
     path('ads/', include('ads.urls')),
     path('categories/', include('categories.urls')),
     path('ai/', include('ai.urls')),
-
+    path('fb/', include('fb.urls'))
 ]
 
 
