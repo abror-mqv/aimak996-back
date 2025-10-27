@@ -13,5 +13,7 @@ urlpatterns = [
     path('delete/<int:ad_id>/', DeleteAdView.as_view(), name='delete_ad'),
 
     path('public-city/<int:city_id>/category/<int:category_id>', PublicAdsByCityAndCategoryView.as_view()),
+    # support both with and without trailing slash for backward compatibility with mobile client
+    path('search/<int:city_id>', AdSearchView.as_view(), name='ad-search-noslash'),
     path('search/<int:city_id>/', AdSearchView.as_view(), name='ad-search'),
 ]
