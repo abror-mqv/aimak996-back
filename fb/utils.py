@@ -3,10 +3,11 @@ from firebase_admin import messaging
 from django.conf import settings
 from datetime import datetime
 import logging
+from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-def send_notification_to_all(title: str, body: str, data: dict | None = None):
+def send_notification_to_all(title: str, body: str, data: Optional[Dict[str, Any]] = None):
     """
     Отправляет нотификацию на топик 'all_users'
     """
