@@ -2,9 +2,10 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from ads.models import Ad
 import re
+from typing import Optional
 
 
-def normalize_phone(raw: str) -> str | None:
+def normalize_phone(raw: str) -> Optional[str]:
     if not raw:
         return None
     digits = re.sub(r"\D+", "", raw)
