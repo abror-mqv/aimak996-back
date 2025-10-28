@@ -54,7 +54,8 @@ INSTALLED_APPS = [
     'categories',
     'users',
     'rest_framework.authtoken',
-    'ai'
+    'ai',
+    'fb'
 ]
 
 REST_FRAMEWORK = {
