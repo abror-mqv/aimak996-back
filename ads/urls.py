@@ -1,10 +1,11 @@
 from django.urls import path
-from .views import CreateAdView, AdSearchView, DeleteAdView ,AdsByCityAndCategoryViewMineSearch,  AdsByModeratorView,  AdsByCityView, CitiesListView, AdsByCityAndCategoryView, AdsByCityAndCategoryViewMine, EditAdView, PublicAdsByCityAndCategoryView
+from .views import CreateAdView, AdSearchView, DeleteAdView ,AdsByCityAndCategoryViewMineSearch,  AdsByModeratorView,  AdsByCityView, CitiesListView, AdsByCityAndCategoryView, AdsByCityAndCategoryViewMine, EditAdView, PublicAdsByCityAndCategoryView, UpdateCityInfoView
 
 urlpatterns = [
     path('create/', CreateAdView.as_view()),
     path('get/<int:city_id>', AdsByCityView.as_view()),
     path('get-cities-list', CitiesListView.as_view()),
+    path('update-city-info/<int:city_id>', UpdateCityInfoView.as_view()),
     path('city/<int:city_id>/category/<int:category_id>/', AdsByCityAndCategoryView.as_view()),
     path('my-city/<int:city_id>/category/<int:category_id>/', AdsByCityAndCategoryViewMine.as_view()),
     path('by_moderator/<int:moderator_id>/', AdsByModeratorView.as_view()),

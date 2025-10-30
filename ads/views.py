@@ -75,8 +75,34 @@ class CreateAdView(APIView):
 class CitiesListView(View):
     def get(self, request):
         cities = City.objects.all().order_by('name')
-        data = [{"id": city.id, "name": city.name} for city in cities]
+        data = [{"id": city.id, "name": city.name, "info": {
+            "moderator_phone": city.moderator_phone,
+            "text_for_share": city.text_for_share,
+            "text_for_upload": city.text_for_upload,
+            "playmarket_link": city.playmarket_link,
+            "appstore_link": city.appstore_link,
+            "update_text": city.update_text,
+            "required_version": city.required_version,
+        }} for city in cities]
         return JsonResponse(data, safe=False)
+
+class UpdateCityInfoView(APIView):
+    permission_classes = [IsAdmin]
+    def post(self, request, city_id):
+        try:
+            city = City.objects.get(id=city_id)
+        except City.DoesNotExist:
+            return Response({"detail": "Город не найден"}, status=404)
+        
+        city.moderator_phone = request.data.get("moderator_phone", city.moderator_phone)
+        city.text_for_share = request.data.get("text_for_share", city.text_for_share)
+        city.text_for_upload = request.data.get("text_for_upload", city.text_for_upload)
+        city.playmarket_link = request.data.get("playmarket_link", city.playmarket_link)
+        city.appstore_link = request.data.get("appstore_link", city.appstore_link)
+        city.update_text = request.data.get("update_text", city.update_text)
+        city.required_version = request.data.get("required_version", city.required_version)
+        city.save()
+        return Response({"detail": "Информация о городе успешно обновлена"}, status=200)
 
 class AdsByCityView(View):
     def get(self, request, city_id):
