@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions, authentication
 from .models import Ad, AdPhoto, City
 from categories.models import Category
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage
 from django.db.models import Q
@@ -87,7 +87,7 @@ class CitiesListView(View):
         return JsonResponse(data, safe=False)
 
 class UpdateCityInfoView(APIView):
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAdminUser]
     def post(self, request, city_id):
         try:
             city = City.objects.get(id=city_id)
