@@ -15,6 +15,45 @@ from django.contrib.auth import get_user_model
 from users.models import ModeratorActivityStat
 from django.utils import timezone
 import pytz
+import io
+from PIL import Image
+from django.core.files.base import ContentFile
+
+# Target image size in bytes (300KB)
+TARGET_IMAGE_SIZE = 300 * 1024
+
+def compress_image(image, target_size=TARGET_IMAGE_SIZE, quality=85, min_quality=40):
+    """
+    Compress an image to be under the target_size while maintaining aspect ratio.
+    Returns a ContentFile with the compressed image data.
+    """
+    img = Image.open(image)
+    
+    # Convert to RGB if image is in RGBA mode (to avoid issues with JPEG)
+    if img.mode in ('RGBA', 'P'):
+        img = img.convert('RGB')
+    
+    # Start with original size and reduce quality until under target size
+    current_quality = quality
+    output = io.BytesIO()
+    
+    while current_quality >= min_quality:
+        output.seek(0)
+        output.truncate()
+        
+        # Save with current quality setting
+        img.save(output, format='JPEG', quality=current_quality, optimize=True)
+        
+        # If we're under target size or at minimum quality, we're done
+        if output.tell() <= target_size or current_quality <= min_quality:
+            break
+            
+        # Reduce quality for next iteration
+        current_quality -= 5
+    
+    # Create a ContentFile with the compressed image data
+    output.seek(0)
+    return ContentFile(output.read(), name=image.name)
 
 
 class CreateAdView(APIView):
@@ -47,7 +86,12 @@ class CreateAdView(APIView):
         )   
         ad.cities.set(cities)
         for image in request.FILES.getlist("images"):
-            AdPhoto.objects.create(ad=ad, image=image)
+            # Check if image is larger than 50KB before compressing
+            if image.size > 50 * 1024:  # Only compress if larger than 50KB
+                compressed_image = compress_image(image)
+                AdPhoto.objects.create(ad=ad, image=compressed_image)
+            else:
+                AdPhoto.objects.create(ad=ad, image=image)
 
         
         now = timezone.now().astimezone(pytz.timezone('Asia/Bishkek'))
