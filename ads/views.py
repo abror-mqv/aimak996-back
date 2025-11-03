@@ -173,40 +173,54 @@ class AdsByCityView(View):
 
 class AdsByCityAndCategoryView(View):
     def get(self, request, city_id, category_id):
-        try:
-            city = City.objects.get(id=city_id)
-        except City.DoesNotExist:
-            return JsonResponse({"detail": "Город не найден"}, status=404)
-
-        ads_query = Ad.objects.filter(cities=city)\
-                              .select_related('category')\
-                              .prefetch_related('photos')\
-                              .order_by('-created_at')
+        # Формируем оптимизированный QuerySet
+        ads_query = Ad.objects.select_related('category')\
+                             .prefetch_related('photos', 'cities')\
+                             .filter(cities__id=city_id)\
+                             .order_by('-created_at')
 
         if category_id != 0:
-            try:
-                category = Category.objects.get(id=category_id)
-                ads_query = ads_query.filter(category=category)
-            except Category.DoesNotExist:
+            ads_query = ads_query.filter(category_id=category_id)
+
+        # Если нет объявлений, проверяем причину
+        if not ads_query.exists():
+            if not City.objects.filter(id=city_id).exists():
+                return JsonResponse({"detail": "Город не найден"}, status=404)
+            if category_id != 0 and not Category.objects.filter(id=category_id).exists():
                 return JsonResponse({"detail": "Категория не найдена"}, status=404)
 
+        # Параметры пагинации
+        page = int(request.GET.get('page', 1))
+        limit = int(request.GET.get('limit', 20))
+        paginator = Paginator(ads_query, limit)
+        
+        try:
+            ads_page = paginator.page(page)
+        except EmptyPage:
+            ads_page = []
+
         ads_data = []
-        for ad in ads_query:
+        for ad in ads_page:
             cities = ad.cities.all()
             ads_data.append({
                 "id": ad.id,
                 "description": ad.description,
                 "contact_phone": ad.contact_phone,
-                "category": ad.category.name_kg,
-                "created_at": ad.created_at.isoformat(),
-                "category_id": ad.category.id,
+                "category": ad.category.name_kg if ad.category else None,
+                "category_id": ad.category.id if ad.category else None,
                 "cities": [city.name for city in cities],
                 "cities_ids": [city.id for city in cities],
-                "author": ad.author.name,
+                "created_at": ad.created_at.isoformat(),
+                "author": ad.author.name if ad.author else None,
                 "images": [request.build_absolute_uri(photo.image.url) for photo in ad.photos.all()],
             })
 
-        return JsonResponse(ads_data, safe=False)
+        return JsonResponse({
+            "results": ads_data,
+            "page": page,
+            "total_pages": paginator.num_pages,
+            "total_count": paginator.count
+        }, safe=False)
     
 
 
@@ -214,43 +228,54 @@ class AdsByCityAndCategoryViewMine(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, city_id, category_id):
-        try:
-            city = City.objects.get(id=city_id)
-        except City.DoesNotExist:
-            return Response({"detail": "Город не найден"}, status=404)
-
-        ads_query = Ad.objects.filter(cities=city)\
-                              .select_related('category')\
-                              .prefetch_related('photos', 'cities')\
-                              .order_by('-created_at')
+        # Формируем оптимизированный QuerySet
+        ads_query = Ad.objects.select_related('category')\
+                             .prefetch_related('photos', 'cities')\
+                             .filter(cities__id=city_id, author=request.user)\
+                             .order_by('-created_at')
 
         if category_id != 0:
-            try:
-                category = Category.objects.get(id=category_id)
-                ads_query = ads_query.filter(category=category)
-            except Category.DoesNotExist:
+            ads_query = ads_query.filter(category_id=category_id)
+
+        # Если нет объявлений, проверяем причину
+        if not ads_query.exists():
+            if not City.objects.filter(id=city_id).exists():
+                return Response({"detail": "Город не найден"}, status=404)
+            if category_id != 0 and not Category.objects.filter(id=category_id).exists():
                 return Response({"detail": "Категория не найдена"}, status=404)
 
-        # 🔒 Только объявления текущего пользователя
-        ads_query = ads_query.filter(author=request.user)
+        # Параметры пагинации
+        page = int(request.GET.get('page', 1))
+        limit = int(request.GET.get('limit', 20))
+        paginator = Paginator(ads_query, limit)
+        
+        try:
+            ads_page = paginator.page(page)
+        except EmptyPage:
+            ads_page = []
 
         ads_data = []
-        for ad in ads_query:
+        for ad in ads_page:
             cities = ad.cities.all()
             ads_data.append({
                 "id": ad.id,
                 "description": ad.description,
                 "contact_phone": ad.contact_phone,
                 "category": ad.category.name_kg if ad.category else None,
-                "category_id": ad.category.id,
+                "category_id": ad.category.id if ad.category else None,
                 "cities": [city.name for city in cities],
                 "cities_ids": [city.id for city in cities],
                 "created_at": ad.created_at.isoformat(),
-                "author": ad.author.name if ad.author is not None else None,
+                "author": ad.author.name if ad.author else None,
                 "images": [request.build_absolute_uri(photo.image.url) for photo in ad.photos.all()],
             })
 
-        return Response(ads_data)
+        return Response({
+            "results": ads_data,
+            "page": page,
+            "total_pages": paginator.num_pages,
+            "total_count": paginator.count
+        })
 
 
 
