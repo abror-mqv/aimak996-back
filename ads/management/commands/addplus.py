@@ -9,7 +9,7 @@ if project_root not in sys.path:
     sys.path.append(project_root)
 
 # Set up Django environment
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'threeseven.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aimak996-back.settings')
 import django
 django.setup()
 
