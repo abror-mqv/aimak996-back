@@ -22,6 +22,13 @@ from django.core.files.base import ContentFile
 # Target image size in bytes (300KB)
 TARGET_IMAGE_SIZE = 300 * 1024
 
+def format_phone(phone: str) -> str:
+    """Format phone number to ensure it starts with a plus sign."""
+    if not phone:
+        return phone
+    return phone if phone.startswith('+') else f"+{phone}"
+
+
 def compress_image(image, target_size=TARGET_IMAGE_SIZE, quality=85, min_quality=40):
     """
     Compress an image to be under the target_size while maintaining aspect ratio.
@@ -78,9 +85,12 @@ class CreateAdView(APIView):
         cities = City.objects.filter(id__in=city_ids)
         if not cities.exists():
             return Response({"error": "No valid cities found"}, status=400)
+        # Ensure phone number has a leading plus
+        formatted_phone = format_phone(contact_phone)
+        
         ad = Ad.objects.create(
             description=description,
-            contact_phone=contact_phone,
+            contact_phone=formatted_phone,
             category=category,
             author=request.user
         )   
