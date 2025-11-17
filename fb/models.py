@@ -7,6 +7,7 @@ class Notification(models.Model):
     body = models.TextField(blank=True)
     data = models.JSONField(blank=True, null=True)  # опционально
     published = models.BooleanField(default=False)
+    city = models.CharField(max_length=128, null=True, blank=True)
     sent_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(get_user_model(), null=True, blank=True, on_delete=models.SET_NULL)

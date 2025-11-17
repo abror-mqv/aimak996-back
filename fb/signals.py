@@ -20,7 +20,7 @@ def send_notification_on_publish(sender, instance: Notification, **kwargs):
     if (old is None and instance.published) or (old is not None and not old.published and instance.published):
         # попытаемся отправить; если упадёт — не мешаем сохранить, но логгируем
         try:
-            send_notification_to_all(instance.title, instance.body, data=instance.data or {})
+            send_notification_to_all(instance.title, instance.body, data=instance.data or {}, city=instance.city)
             instance.sent_at = timezone.now()
         except Exception:
             # sent_at не заполняем при ошибке, админ увидит

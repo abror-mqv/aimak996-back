@@ -11,5 +11,5 @@ class TestPushView(APIView):
         serializer = TestPushSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        send_notification_to_all(data['title'], data['body'])
+        send_notification_to_all(data['title'], data['body'], city=data.get('city'))
         return Response({'status': 'ok'})
