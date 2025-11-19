@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'colorfield',
     # 'corsheaders'
     'rest_framework',
     'ads',
@@ -55,7 +56,8 @@ INSTALLED_APPS = [
     'users',
     'rest_framework.authtoken',
     'ai',
-    'fb'
+    'fb',
+    'business'
 ]
 
 REST_FRAMEWORK = {

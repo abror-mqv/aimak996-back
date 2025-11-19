@@ -10,9 +10,9 @@ urlpatterns = [
     path('ads/', include('ads.urls')),
     path('categories/', include('categories.urls')),
     path('ai/', include('ai.urls')),
-    path('fb/', include('fb.urls'))
+    path('fb/', include('fb.urls')),
+    path('business/', include('business.urls')),
 ]
 
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    
