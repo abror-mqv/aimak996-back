@@ -249,9 +249,13 @@ class ModBusinessPhotoAddView(APIView):
         if not files:
             return Response({"error": "Пришлите files=images[]"}, status=400)
         created = []
+        # append photos to the end based on current max position
+        current_max = BusinessPhoto.objects.filter(business=card).aggregate(m=models.Max("position")).get("m") or 0
+        pos = current_max + 1
         for f in files:
-            p = BusinessPhoto.objects.create(business=card, image=f)
+            p = BusinessPhoto.objects.create(business=card, image=f, position=pos)
             created.append(p.id)
+            pos += 1
         return Response({"created_ids": created}, status=201)
 
 
@@ -264,6 +268,40 @@ class ModBusinessPhotoDeleteView(APIView):
         return Response({"message": "deleted"})
 
 
+class ModBusinessPhotoReplaceView(APIView):
+    permission_classes = [IsAdminOrModerator]
+
+    def put(self, request, photo_id):
+        p = get_object_or_404(BusinessPhoto, pk=photo_id)
+        if "image" not in request.FILES:
+            return Response({"error": "Пришлите image файл"}, status=400)
+        p.image = request.FILES["image"]
+        p.save()
+        return Response({"message": "replaced"})
+
+
+class ModBusinessPhotosReorderView(APIView):
+    permission_classes = [IsAdminOrModerator]
+
+    def post(self, request, pk):
+        card = get_object_or_404(BusinessCard, pk=pk)
+        order = request.data.get("order")
+        if isinstance(order, str):
+            try:
+                order = json.loads(order)
+            except Exception:
+                return Response({"error": "order должен быть JSON-массивом id"}, status=400)
+        if not isinstance(order, list) or not order:
+            return Response({"error": "Передайте order: [photo_id, ...]"}, status=400)
+        # map id -> position starting from 1
+        pos_map = {int(pid): idx + 1 for idx, pid in enumerate(order)}
+        photos = BusinessPhoto.objects.filter(business=card, id__in=pos_map.keys())
+        for p in photos:
+            p.position = pos_map.get(p.id, p.position)
+        BusinessPhoto.objects.bulk_update(photos, ["position"])
+        return Response({"message": "reordered", "count": photos.count()})
+
+
 class ModBusinessCatalogItemAddView(APIView):
     permission_classes = [IsAdminOrModerator]
 
@@ -272,11 +310,14 @@ class ModBusinessCatalogItemAddView(APIView):
         name = request.data.get("name")
         if not name:
             return Response({"error": "name обязателен"}, status=400)
+        # append to end
+        current_max = BusinessCatalogItem.objects.filter(business=card).aggregate(m=models.Max("position")).get("m") or 0
         item = BusinessCatalogItem(
             business=card,
             name=name,
             description=request.data.get("description"),
             price=request.data.get("price"),
+            position=current_max + 1,
         )
         if "photo" in request.FILES:
             item.photo = request.FILES["photo"]
@@ -292,6 +333,11 @@ class ModBusinessCatalogItemUpdateView(APIView):
         for f in ["name", "description", "price"]:
             if f in request.data:
                 setattr(item, f, request.data.get(f))
+        if "position" in request.data:
+            try:
+                item.position = int(request.data.get("position"))
+            except Exception:
+                return Response({"error": "position должен быть числом"}, status=400)
         if "photo" in request.FILES:
             item.photo = request.FILES["photo"]
         item.save()
@@ -308,6 +354,27 @@ class ModBusinessCatalogItemDeleteView(APIView):
         item = get_object_or_404(BusinessCatalogItem, pk=item_id)
         item.delete()
         return Response({"message": "deleted"})
+
+
+class ModBusinessCatalogReorderView(APIView):
+    permission_classes = [IsAdminOrModerator]
+
+    def post(self, request, pk):
+        card = get_object_or_404(BusinessCard, pk=pk)
+        order = request.data.get("order")
+        if isinstance(order, str):
+            try:
+                order = json.loads(order)
+            except Exception:
+                return Response({"error": "order должен быть JSON-массивом id"}, status=400)
+        if not isinstance(order, list) or not order:
+            return Response({"error": "Передайте order: [item_id, ...]"}, status=400)
+        pos_map = {int(iid): idx + 1 for idx, iid in enumerate(order)}
+        items = BusinessCatalogItem.objects.filter(business=card, id__in=pos_map.keys())
+        for it in items:
+            it.position = pos_map.get(it.id, it.position)
+        BusinessCatalogItem.objects.bulk_update(items, ["position"])
+        return Response({"message": "reordered", "count": items.count()})
 
 
 class BusinessCardDetailByPkView(APIView):

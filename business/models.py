@@ -83,6 +83,10 @@ class BusinessPhoto(models.Model):
     """Дополнительные фото для карусели"""
     business = models.ForeignKey(BusinessCard, on_delete=models.CASCADE, related_name='carousel_photos')
     image = models.ImageField(upload_to='business/carousel_photos/')
+    position = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ["position", "id"]
 
 
 class BusinessCatalogItem(models.Model):
@@ -93,6 +97,10 @@ class BusinessCatalogItem(models.Model):
     photo = models.ImageField(upload_to='business/catalog_photos/', blank=True, null=True)
     price = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    position = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.name} ({self.business.name})"
+
+    class Meta:
+        ordering = ["position", "id"]

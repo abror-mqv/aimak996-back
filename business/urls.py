@@ -16,9 +16,12 @@ from .views import (
     ModBusinessScheduleSetView,
     ModBusinessPhotoAddView,
     ModBusinessPhotoDeleteView,
+    ModBusinessPhotoReplaceView,
+    ModBusinessPhotosReorderView,
     ModBusinessCatalogItemAddView,
     ModBusinessCatalogItemUpdateView,
     ModBusinessCatalogItemDeleteView,
+    ModBusinessCatalogReorderView,
 )
 
 
@@ -43,9 +46,12 @@ urlpatterns = [
 
     path("mod/cards/<str:pk>/photos/add/", ModBusinessPhotoAddView.as_view()),
     path("mod/photos/<int:photo_id>/delete/", ModBusinessPhotoDeleteView.as_view()),
+    path("mod/photos/<int:photo_id>/replace/", ModBusinessPhotoReplaceView.as_view()),
+    path("mod/cards/<str:pk>/photos/reorder/", ModBusinessPhotosReorderView.as_view()),
 
     path("mod/cards/<str:pk>/catalog/add/", ModBusinessCatalogItemAddView.as_view()),
     path("mod/catalog/<int:item_id>/edit/", ModBusinessCatalogItemUpdateView.as_view()),
     path("mod/catalog/<int:item_id>/delete/", ModBusinessCatalogItemDeleteView.as_view()),
+    path("mod/cards/<str:pk>/catalog/reorder/", ModBusinessCatalogReorderView.as_view()),
 ]
 
