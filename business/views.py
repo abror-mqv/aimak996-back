@@ -11,6 +11,7 @@ from .models import (
 )
 from django.shortcuts import get_object_or_404
 import json
+from django.db import models
 
 
 def abs_url(request, file_field):
@@ -423,7 +424,14 @@ class BusinessCardDetailByPkView(APIView):
             "category_id": b.category_id,
             "created_at": b.created_at.isoformat() if b.created_at else None,
             "updated_at": b.updated_at.isoformat() if b.updated_at else None,
-            "photos": [abs_url(request, p.image) for p in b.carousel_photos.all()],
+            "photos": [
+                {
+                    "url": abs_url(request, p.image),
+                    "pos_id": p.position,
+                    "image_id": p.id,
+                }
+                for p in b.carousel_photos.all()
+            ],
             "catalog_items": [
                 {
                     "id": ci.id,
@@ -523,7 +531,14 @@ class BusinessPhotosByCardView(APIView):
 
     def get(self, request, pk):
         photos = BusinessPhoto.objects.filter(business_id=pk)
-        data = [abs_url(request, p.image) for p in photos]
+        data = [
+            {
+                "url": abs_url(request, p.image),
+                "pos_id": p.position,
+                "image_id": p.id,
+            }
+            for p in photos
+        ]
         return Response(data)
 
 
@@ -531,7 +546,7 @@ class BusinessCatalogItemsByCardView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, pk):
-        items = BusinessCatalogItem.objects.filter(business_id=pk).order_by("-created_at")
+        items = BusinessCatalogItem.objects.filter(business_id=pk)
         data = [
             {
                 "id": i.id,
