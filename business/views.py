@@ -43,6 +43,17 @@ class BusinessCategoryListView(APIView):
         return Response(data)
 
 
+class BusinessCardVisitIncrementView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, pk):
+        updated = BusinessCard.objects.filter(pk=pk).update(visit_count=models.F("visit_count") + 1)
+        if not updated:
+            return Response({"detail": "Not found"}, status=404)
+        count = BusinessCard.objects.filter(pk=pk).values_list("visit_count", flat=True).first()
+        return Response({"pk": pk, "visit_count": count})
+
+
 # ==========================
 # Moderation endpoints (IsAuthenticated)
 # ==========================

@@ -13,6 +13,8 @@ CITY_TOPIC_MAP: Dict[str, str] = {
     'nookat': 'all_users',
     'kyzylkya': 'kyzylkya',
     'kadamjai': 'kadamjai',
+    'leilek': 'leilek',
+    'batken': 'batken'
 }
 
 def _topic_for_city(city: Optional[str]) -> str:
