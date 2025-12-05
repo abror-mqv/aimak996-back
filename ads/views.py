@@ -351,7 +351,7 @@ class PublicAdsByCityAndCategoryView(View):
         # Формируем оптимизированный QuerySet
         ads_query = Ad.objects.select_related('category')\
                              .prefetch_related('photos')\
-                             .filter(cities__id=city_id)\
+                             .filter(cities__id=city_id, is_paid=True)\
                              .order_by('-created_at')
 
         if category_id != 0:
