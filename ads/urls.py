@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CreateAdView, AdSearchView, DeleteAdView ,AdsByCityAndCategoryViewMineSearch,  AdsByModeratorView,  AdsByCityView, CitiesListView, AdsByCityAndCategoryView, AdsByCityAndCategoryViewMine, EditAdView, PublicAdsByCityAndCategoryView, UpdateCityInfoView
+from .views import CreateAdView, CreateDraftAdView, AdSearchView, DeleteAdView, AdsByCityAndCategoryViewMineSearch,  AdsByModeratorView,  AdsByCityView, CitiesListView, AdsByCityAndCategoryView, AdsByCityAndCategoryViewMine, EditAdView, PublicAdsByCityAndCategoryView, UpdateCityInfoView, UnpaidAdsView
 
 urlpatterns = [
     path('create/', CreateAdView.as_view()),
@@ -17,4 +17,10 @@ urlpatterns = [
     # support both with and without trailing slash for backward compatibility with mobile client
     path('search/<int:city_id>', AdSearchView.as_view(), name='ad-search-noslash'),
     path('search/<int:city_id>/', AdSearchView.as_view(), name='ad-search'),
+    
+    # Create draft ad (for anonymous users)
+    path('create-draft/', CreateDraftAdView.as_view(), name='create-draft-ad'),
+    
+    # Admin endpoints
+    path('admin/unpaid-ads/', UnpaidAdsView.as_view(), name='admin-unpaid-ads'),
 ]

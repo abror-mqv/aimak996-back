@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions, authentication
 from .models import Ad, AdPhoto, City
 from categories.models import Category
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny, IsAdminUser
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage
 from django.db.models import Q
@@ -92,7 +92,8 @@ class CreateAdView(APIView):
             description=description,
             contact_phone=formatted_phone,
             category=category,
-            author=request.user
+            author=request.user,
+            is_paid=True  # Automatically mark new ads as paid
         )   
         ad.cities.set(cities)
         for image in request.FILES.getlist("images"):
@@ -124,6 +125,108 @@ class CreateAdView(APIView):
         return Response({"message": "Ad created", "ad_id": ad.id}, status=201)
 
 
+class CreateDraftAdView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        description = request.data.get("description")
+        contact_phone = request.data.get("contact_phone")
+        category_id = request.data.get("category")
+        city_ids_raw = request.data.get("cities")
+
+        if not all([description, contact_phone, category_id, city_ids_raw]):
+            return Response({"error": "All fields are required"}, status=400)
+        
+        try:
+            city_ids = [int(cid.strip()) for cid in city_ids_raw.split(",") if cid.strip().isdigit()]
+        except ValueError:
+            return Response({"error": "Invalid city IDs"}, status=400)
+            
+        try:
+            category = Category.objects.get(id=category_id)
+        except Category.DoesNotExist:
+            return Response({"error": "Invalid category"}, status=400)
+            
+        cities = City.objects.filter(id__in=city_ids)
+        if not cities.exists():
+            return Response({"error": "No valid cities found"}, status=400)
+            
+        # Format phone number
+        formatted_phone = format_phone(contact_phone)
+        
+        # Create ad without author (for anonymous users)
+        ad = Ad.objects.create(
+            description=description,
+            contact_phone=formatted_phone,
+            category=category,
+            is_paid=False  # Draft ads are not paid by default
+        )   
+        
+        # Set cities for the ad
+        ad.cities.set(cities)
+        
+        # Handle image uploads
+        for image in request.FILES.getlist("images"):
+            if image.size > 50 * 1024:  # Only compress if larger than 50KB
+                compressed_image = compress_image(image)
+                AdPhoto.objects.create(ad=ad, image=compressed_image)
+            else:
+                AdPhoto.objects.create(ad=ad, image=image)
+
+        # Update moderator stats if user is authenticated
+        if request.user.is_authenticated:
+            now = timezone.now().astimezone(pytz.timezone('Asia/Bishkek'))
+            date = now.date()
+            hour = now.hour
+
+            stat_obj, created = ModeratorActivityStat.objects.get_or_create(
+                user=request.user,
+                date=date,
+                hour=hour,
+                defaults={'ad_count': 1}
+            )
+            if not created:
+                stat_obj.ad_count += 1
+                stat_obj.save()
+
+        return Response({"message": "Draft ad created", "ad_id": ad.id}, status=201)
+
+
+class UnpaidAdsView(APIView):
+    """
+    View to list all unpaid ads (for administrators/moderators only)
+    """
+    permission_classes = [IsAdminUser]  # Only accessible by admin users
+    
+    def get(self, request):
+        # Get all unpaid ads with related data to avoid N+1 queries
+        ads = Ad.objects.filter(is_paid=False)\
+                      .select_related('category')\
+                      .prefetch_related('cities', 'photos')\
+                      .order_by('-created_at')
+        
+        # Prepare response data
+        data = []
+        for ad in ads:
+            data.append({
+                'id': ad.id,
+                'description': ad.description,
+                'contact_phone': ad.contact_phone,
+                'created_at': ad.created_at,
+                'category': {
+                    'id': ad.category.id,
+                    'name': ad.category.name_kg
+                },
+                'cities': [{'id': city.id, 'name': city.name} for city in ad.cities.all()],
+                'photos': [photo.image.url for photo in ad.photos.all() if photo.image],
+                'is_confident': ad.is_confident,
+                'author': ad.author.username if ad.author else None
+            })
+            
+        return Response({
+            'count': len(data),
+            'results': data
+        })
 
 
 class CitiesListView(View):
