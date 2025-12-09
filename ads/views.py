@@ -248,8 +248,10 @@ class MarkAdAsPaidView(APIView):
         if ad.is_paid:
             return Response({"message": "Ad is already marked as paid"}, status=200)
 
+        # Mark as paid and refresh creation date to now
         ad.is_paid = True
-        ad.save(update_fields=["is_paid"])
+        ad.created_at = timezone.now()
+        ad.save(update_fields=["is_paid", "created_at"])
 
         return Response({"message": "Ad marked as paid", "ad_id": ad.id}, status=200)
 
