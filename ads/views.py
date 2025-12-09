@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions, authentication
 from .models import Ad, AdPhoto, City
 from categories.models import Category
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage
 from django.db.models import Q
@@ -227,6 +227,31 @@ class UnpaidAdsView(APIView):
             'count': len(data),
             'results': data
         })
+
+
+class MarkAdAsPaidView(APIView):
+    """
+    Admin endpoint to mark a specific ad as paid.
+    """
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        ad_id = request.data.get('ad_id')
+        if not ad_id:
+            return Response({"error": "ad_id is required"}, status=400)
+
+        try:
+            ad = Ad.objects.get(id=ad_id)
+        except Ad.DoesNotExist:
+            return Response({"error": "Ad not found"}, status=404)
+
+        if ad.is_paid:
+            return Response({"message": "Ad is already marked as paid"}, status=200)
+
+        ad.is_paid = True
+        ad.save(update_fields=["is_paid"])
+
+        return Response({"message": "Ad marked as paid", "ad_id": ad.id}, status=200)
 
 
 class CitiesListView(View):

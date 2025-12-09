@@ -1,5 +1,21 @@
 from django.urls import path
-from .views import CreateAdView, CreateDraftAdView, AdSearchView, DeleteAdView, AdsByCityAndCategoryViewMineSearch,  AdsByModeratorView,  AdsByCityView, CitiesListView, AdsByCityAndCategoryView, AdsByCityAndCategoryViewMine, EditAdView, PublicAdsByCityAndCategoryView, UpdateCityInfoView, UnpaidAdsView
+from .views import (
+    CreateAdView,
+    CreateDraftAdView,
+    AdSearchView,
+    DeleteAdView,
+    AdsByCityAndCategoryViewMineSearch,
+    AdsByModeratorView,
+    AdsByCityView,
+    CitiesListView,
+    AdsByCityAndCategoryView,
+    AdsByCityAndCategoryViewMine,
+    EditAdView,
+    PublicAdsByCityAndCategoryView,
+    UpdateCityInfoView,
+    UnpaidAdsView,
+    MarkAdAsPaidView,
+)
 
 urlpatterns = [
     path('create/', CreateAdView.as_view()),
@@ -23,4 +39,5 @@ urlpatterns = [
     
     # Admin endpoints
     path('admin/unpaid-ads/', UnpaidAdsView.as_view(), name='admin-unpaid-ads'),
+    path('admin/mark-paid/', MarkAdAsPaidView.as_view(), name='admin-mark-ad-paid'),
 ]
