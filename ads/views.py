@@ -196,7 +196,7 @@ class UnpaidAdsView(APIView):
     """
     View to list all unpaid ads (for administrators/moderators only)
     """
-    #permission_classes = [IsAdminUser]  # Only accessible by admin users
+    permission_classes = [IsAdminUser]  # Only accessible by admin users
     
     def get(self, request):
         # Get all unpaid ads with related data to avoid N+1 queries
@@ -220,7 +220,7 @@ class UnpaidAdsView(APIView):
                 'cities': [{'id': city.id, 'name': city.name} for city in ad.cities.all()],
                 'photos': [photo.image.url for photo in ad.photos.all() if photo.image],
                 'is_confident': ad.is_confident,
-                'author': ad.author.username if ad.author else None
+                'author': None
             })
             
         return Response({
