@@ -1,4 +1,5 @@
-from datetime import timedelta, timezone
+from django.utils import timezone
+from datetime import timedelta
 from django.db import models
 from categories.models import Category
 from users.models import User
@@ -33,7 +34,7 @@ class Ad(models.Model):
         return f"{self.contact_phone} - {self.category.name_kg}"
 
     def is_expired(self):
-        if self.category.name.lower() == "попутка":
+        if self.category.ru_name.lower() == "попутка":
             lifetime = timedelta(days=5)
         else:
             lifetime = timedelta(days=30)
@@ -50,3 +51,20 @@ class AdPhoto(models.Model):
         super().delete(*args, **kwargs)
         if storage.exists(path):
             storage.delete(path)
+
+
+class AdComplaint(models.Model):
+    """
+    Модель для хранения жалоб на неуместные объявления от анонимных пользователей
+    """
+    ad = models.ForeignKey(Ad, on_delete=models.CASCADE, related_name='complaints')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Жалоба на объявление'
+        verbose_name_plural = 'Жалобы на объявления'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Жалоба на объявление #{self.ad.id} от {self.created_at.strftime("%d.%m.%Y %H:%M")}'
+

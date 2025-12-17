@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     CreateAdView,
     CreateDraftAdView,
+    CreateComplaintView,
     AdSearchView,
     DeleteAdView,
     AdsByCityAndCategoryViewMineSearch,
@@ -36,6 +37,9 @@ urlpatterns = [
     
     # Create draft ad (for anonymous users)
     path('create-draft/', CreateDraftAdView.as_view(), name='create-draft-ad'),
+    
+    # Create complaint (for anonymous users)
+    path('complaint/', CreateComplaintView.as_view(), name='create-complaint'),
     
     # Admin endpoints
     path('admin/unpaid-ads/', UnpaidAdsView.as_view(), name='admin-unpaid-ads'),

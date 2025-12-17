@@ -5,7 +5,7 @@ from django.views import View
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions, authentication
-from .models import Ad, AdPhoto, City
+from .models import Ad, AdPhoto, City, AdComplaint
 from categories.models import Category
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from django.shortcuts import get_object_or_404
@@ -190,6 +190,32 @@ class CreateDraftAdView(APIView):
                 stat_obj.save()
 
         return Response({"message": "Draft ad created", "ad_id": ad.id}, status=201)
+
+
+class CreateComplaintView(APIView):
+    """
+    View for anonymous users to report inappropriate ads
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        ad_id = request.data.get('ad_id')
+        
+        if not ad_id:
+            return Response({"error": "ad_id is required"}, status=400)
+        
+        try:
+            ad = Ad.objects.get(id=ad_id)
+        except Ad.DoesNotExist:
+            return Response({"error": "Ad not found"}, status=404)
+        
+        # Create complaint
+        complaint = AdComplaint.objects.create(ad=ad)
+        
+        return Response({
+            "message": "Complaint created successfully", 
+            "complaint_id": complaint.id
+        }, status=201)
 
 
 class UnpaidAdsView(APIView):

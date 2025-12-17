@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'ai',
     'fb',
-    'business'
+    'business',
+    'django_crontab'
 ]
 
 REST_FRAMEWORK = {
