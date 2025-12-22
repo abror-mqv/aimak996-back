@@ -163,3 +163,7 @@ AUTH_USER_MODEL = 'users.User'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+CRONJOBS = [
+    ('0 0 * * *', 'django.core.management.call_command', ['count_expired_ads', '--cleanup']),
+]
