@@ -1,5 +1,10 @@
 from django.core.management.base import BaseCommand
-from ads.utils import count_expired_ads, get_expired_ads_by_category, get_ads_expiring_soon
+from ads.utils import (
+    count_expired_ads,
+    cleanup_expired_ads,
+    get_expired_ads_by_category,
+    get_ads_expiring_soon,
+)
 
 
 class Command(BaseCommand):
@@ -22,6 +27,11 @@ class Command(BaseCommand):
             default=0,
             help='Показать объявления, которые истекут через N дней (0 - не показывать)',
         )
+        parser.add_argument(
+            '--cleanup',
+            action='store_true',
+            help='Удалить все истекшие объявления и связанные медиафайлы',
+        )
 
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS('=== Анализ истекших объявлений ==='))
@@ -29,9 +39,13 @@ class Command(BaseCommand):
         # Основная статистика
         result = count_expired_ads()
         total_expired = result['total_expired_count']
+        total_media = result.get('total_expired_media_count', 0)
         
         self.stdout.write(
             self.style.WARNING(f'Всего истекших объявлений: {total_expired}')
+        )
+        self.stdout.write(
+            self.style.WARNING(f'Всего медиафайлов к удалению: {total_media}')
         )
         
         # Детальная информация
@@ -42,7 +56,8 @@ class Command(BaseCommand):
                     f"ID: {ad['id']}, "
                     f"Категория: {ad['category']}, "
                     f"Телефон: {ad['contact_phone']}, "
-                    f"Создано: {ad['created_at'].strftime('%Y-%m-%d %H:%M')}"
+                    f"Создано: {ad['created_at'].strftime('%Y-%m-%d %H:%M')}, "
+                    f"Медиа: {ad.get('media_count', 0)}"
                 )
         
         # Статистика по категориям
@@ -70,6 +85,17 @@ class Command(BaseCommand):
                 self.stdout.write(
                     self.style.SUCCESS(f'Нет объявлений, истекающих в ближайшие {options["expiring"]} дней')
                 )
-        
-        if total_expired == 0:
+
+        # Очистка истекших объявлений и связанных медиафайлов
+        if options['cleanup']:
+            cleanup_result = cleanup_expired_ads()
+            deleted_ads = cleanup_result.get('deleted_ads', 0)
+            deleted_media = cleanup_result.get('deleted_media', 0)
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f'\nУдалено объявлений: {deleted_ads}, удалено медиафайлов: {deleted_media}'
+                )
+            )
+
+        if total_expired == 0 and not options['cleanup']:
             self.stdout.write(self.style.SUCCESS('Нет истекших объявлений!'))

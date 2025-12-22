@@ -9,24 +9,65 @@ def count_expired_ads():
     (истекшие объявления в зависимости от категории)
     """
     expired_count = 0
+    expired_media_count = 0
     expired_ads = []
     
     all_ads = Ad.objects.all()
     
     for ad in all_ads:
         if ad.is_expired():
+            media_count = ad.photos.count()
             expired_count += 1
+            expired_media_count += media_count
             expired_ads.append({
                 'id': ad.id,
                 'contact_phone': ad.contact_phone,
                 'category': ad.category.name_kg,
                 'created_at': ad.created_at,
-                'is_expired': True
+                'is_expired': True,
+                'media_count': media_count,
             })
     
     return {
         'total_expired_count': expired_count,
+        'total_expired_media_count': expired_media_count,
         'expired_ads': expired_ads
+    }
+
+
+def cleanup_expired_ads():
+    """
+    Удаляет истекшие объявления и связанные медиафайлы.
+    Возвращает словарь со статистикой.
+    """
+    deleted_ads = 0
+    deleted_media = 0
+    details = []
+
+    for ad in Ad.objects.all():
+        if not ad.is_expired():
+            continue
+
+        media_count = ad.photos.count()
+
+        # Удаляем фото через delete(), чтобы стерлись файлы с диска
+        for photo in ad.photos.all():
+            photo.delete()
+
+        ad_id = ad.id
+        ad.delete()
+
+        deleted_ads += 1
+        deleted_media += media_count
+        details.append({
+            'id': ad_id,
+            'deleted_media': media_count,
+        })
+
+    return {
+        'deleted_ads': deleted_ads,
+        'deleted_media': deleted_media,
+        'details': details,
     }
 
 
